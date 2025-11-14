@@ -16,6 +16,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            background-attachment: fixed;
         }
 
         .container {
@@ -1007,7 +1008,7 @@
             <div class="save-load">
                 <h3>Save / Load Deck</h3>
                 <button class="secondary" onclick="saveDeck()">💾 Save Deck</button>
-                <label for="loadDeck" class="file-label">📂 Load Deck</label>
+                <button class="secondary" onclick="document.getElementById('loadDeck').click()">📂 Load Deck</button>
                 <input type="file" id="loadDeck" class="file-input" accept=".json" onchange="loadDeck(event)">
                 <button class="secondary" onclick="clearDeck()" style="background: #f44336;">🗑️ Clear All</button>
             </div>
