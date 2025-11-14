@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTCG Trainer Toolkit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1900px;
+            margin: 0 auto;
+            display: grid;
+            gap: 30px;
+        }
+
+        /* Default layout: sidebar + deck list + preview */
+        .container:not(.customize-active) {
+            grid-template-columns: 400px 320px 1fr;
+        }
+
+        /* When customize panel is active: sidebar + deck list + preview + customize */
+        .container.customize-active {
+            grid-template-columns: 400px 320px 1fr 300px;
+        }
+
+        .deck-list-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            display: none;
+        }
+
+        .deck-list-panel.active {
+            display: block;
+        }
+
+        @media print {
+            .deck-list-panel,
+            .deck-list-panel.active,
+            #deckListPanel {
+                display: none !important;
+                visibility: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
+            }
+        }
+
+        .deck-list-panel h3 {
+            color: #e3350d;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 2px solid #e3350d;
+            padding-bottom: 8px;
+        }
+
+        .deck-list-section {
+            margin-bottom: 20px;
+        }
+
+        .deck-list-section h4 {
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .deck-list-headers {
+            display: grid;
+            grid-template-columns: 1fr 60px 60px 40px 30px;
+            gap: 5px;
+            padding: 6px 0;
+            font-size: 10px;
+            font-weight: bold;
+            color: #666;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 5px;
+        }
+
+        .deck-list-headers div {
+            text-align: center;
+        }
+
+        .deck-list-headers div:first-child {
+            text-align: left;
+        }
+
+        .add-section-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 20px;
+            text-align: center;
+            padding: 0;
+        }
+
+        .add-section-btn:hover {
+            background: #45a049;
+        }
+
+        .deck-list-item {
+            display: grid;
+            grid-template-columns: 1fr 60px 60px 40px 30px;
+            gap: 5px;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 11px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .deck-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .deck-list-item input[type="text"] {
+            padding: 4px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .deck-list-item input[type="text"]:focus {
+            outline: none;
+            border-color: #e3350d;
+        }
+
+        .deck-list-item input[type="number"] {
+            padding: 4px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .deck-list-item input[type="number"]:focus {
+            outline: none;
+            border-color: #e3350d;
+        }
+
+        .deck-list-item .remove-icon {
+            cursor: pointer;
+            color: #f44336;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .deck-list-item .remove-icon:hover {
+            color: #d32f2f;
+        }
+
+        .deck-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e3350d;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .customize-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            display: none;
+        }
+
+        .customize-panel.active {
+            display: block;
+        }
+
+        .preview-area {
+            background: white;
+            border-radius: 12px;
+            padding: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 700px;
+            min-width: 600px;
+        }
+
+        .preview-area h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #e3350d;
+            padding-bottom: 8px;
+        }
+
+        h1 {
+            color: #e3350d;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #e3350d;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            color: #555;
+            margin: 15px 0 10px 0;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #e3350d;
+        }
+
+        .card-input {
+            display: grid;
+            grid-template-columns: 1fr 40px 40px;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .card-input input {
+            font-size: 12px;
+            padding: 6px;
+        }
+
+        .add-card-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .add-card-btn:hover {
+            background: #45a049;
+        }
+
+        .remove-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+
+        .remove-btn:hover {
+            background: #da190b;
+        }
+
+        button.primary {
+            background: #e3350d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.primary:hover {
+            background: #c72c0a;
+        }
+
+        button.secondary {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.secondary:hover {
+            background: #555;
+        }
+
+        .card-preview {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        /* Card styles for different sizes and orientations */
+        .card-5x3-landscape {
+            width: 5in;
+            height: 3in;
+            padding: 12px;
+        }
+
+        .card-5x3-portrait {
+            width: 3in;
+            height: 5in;
+            padding: 12px;
+        }
+
+        .card-3x5-landscape {
+            width: 5in;
+            height: 3in;
+            padding: 12px;
+        }
+
+        .card-3x5-portrait {
+            width: 3in;
+            height: 5in;
+            padding: 12px;
+        }
+
+        .card-poker-landscape {
+            width: 3.5in;
+            height: 2.5in;
+            padding: 8px;
+        }
+
+        .card-poker-portrait {
+            width: 2.5in;
+            height: 3.5in;
+            padding: 8px;
+        }
+
+        .card-4x6-landscape {
+            width: 6in;
+            height: 4in;
+            padding: 14px;
+        }
+
+        .card-4x6-portrait {
+            width: 4in;
+            height: 6in;
+            padding: 14px;
+        }
+
+        .card-a4-landscape {
+            width: 11.69in;
+            height: 8.27in;
+            padding: 20px;
+        }
+
+        .card-a4-portrait {
+            width: 8.27in;
+            height: 11.69in;
+            padding: 20px;
+        }
+
+        .card-letter-landscape {
+            width: 11in;
+            height: 8.5in;
+            padding: 20px;
+        }
+
+        .card-letter-portrait {
+            width: 8.5in;
+            height: 11in;
+            padding: 20px;
+        }
+
+        .card-custom-landscape {
+            padding: 12px;
+        }
+
+        .card-custom-portrait {
+            padding: 12px;
+        }
+
+        .card-header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10px;
+            color: #e3350d;
+            margin-bottom: 6px;
+            padding-bottom: 3px;
+            border-bottom: 2px solid #e3350d;
+        }
+
+        .section {
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 9px;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 3px;
+            padding-bottom: 2px;
+        }
+
+        .column-headers {
+            display: grid;
+            gap: 3px 6px;
+            font-size: 6px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 2px;
+            text-align: center;
+        }
+
+        .column-headers.two-col {
+            grid-template-columns: repeat(2, 1fr 18px 18px);
+        }
+
+        .column-headers.one-col {
+            grid-template-columns: 1fr 18px 18px;
+        }
+
+        .column-headers div:nth-child(3n+1) {
+            text-align: left;
+        }
+
+        .decklist {
+            display: grid;
+            gap: 2px 6px;
+            font-size: 7px;
+            line-height: 1.3;
+        }
+
+        .decklist.two-col {
+            grid-template-columns: repeat(2, 1fr 18px 18px);
+        }
+
+        .decklist.one-col {
+            grid-template-columns: 1fr 18px 18px;
+        }
+
+        .card-name {
+            border-bottom: 0.5px solid #ddd;
+            padding: 2px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 7px;
+        }
+
+        .count-box {
+            border: 0.5px solid #999;
+            border-radius: 2px;
+            background: #fafafa;
+            text-align: center;
+            padding: 2px 0;
+            font-size: 7px;
+        }
+
+        .prize-box {
+            border: 0.5px solid #e3350d;
+            border-radius: 2px;
+            background: #fff5f5;
+            text-align: center;
+            padding: 2px 0;
+            font-size: 7px;
+        }
+
+        .card-footer {
+            margin-top: 6px;
+            padding-top: 3px;
+            border-top: 1px solid #ccc;
+            font-size: 6px;
+            text-align: center;
+            color: #666;
+        }
+
+        /* Official Deck List Styles */
+        .official-decklist {
+            display: none;
+            background: white;
+            font-family: Arial, sans-serif;
+            color: #000;
+        }
+
+        .official-decklist.paper-letter {
+            width: 8.5in;
+            padding: 0.3in 0.5in;
+        }
+
+        .official-decklist.paper-a4 {
+            width: 8.27in;
+            padding: 0.3in 0.5in;
+        }
+
+        .official-decklist.paper-legal {
+            width: 8.5in;
+            padding: 0.3in 0.5in;
+        }
+
+        .player-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 20px;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+
+        .player-info-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .player-info-field label {
+            font-weight: bold;
+            font-size: 10px;
+            margin: 0;
+        }
+
+        .player-info-field .value {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            background: white;
+            min-height: 22px;
+            font-size: 11px;
+        }
+
+        .official-section {
+            margin-bottom: 12px;
+        }
+
+        .official-section-title {
+            font-weight: bold;
+            font-size: 13px;
+            color: #000;
+            margin-bottom: 5px;
+            text-decoration: underline;
+        }
+
+        .official-card-list {
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .official-card-item {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 1px 0;
+        }
+
+        .official-card-count {
+            font-weight: bold;
+            min-width: 15px;
+        }
+
+        .official-card-name {
+            flex: 1;
+        }
+
+        .official-card-set {
+            color: #666;
+            font-size: 10px;
+        }
+
+        .official-total {
+            margin-top: 12px;
+            padding: 6px 10px;
+            border: 2px solid #000;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .admin-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #000;
+            min-height: 80px;
+        }
+
+        .admin-box-title {
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
+        @media print {
+            .official-decklist {
+                width: 100% !important;
+                padding: 0.3in 0.5in !important;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                display: block;
+            }
+            .sidebar {
+                display: none;
+            }
+            .customize-panel {
+                display: none !important;
+            }
+            .deck-list-panel,
+            .deck-list-panel.active,
+            #deckListPanel {
+                display: none !important;
+                visibility: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
+            }
+            .preview-area {
+                box-shadow: none;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            .preview-area h2 {
+                display: none !important;
+            }
+            /* Hide official deck list when printing prize card */
+            #officialDeckList {
+                display: none !important;
+            }
+            .card-preview {
+                box-shadow: none;
+                page-break-after: auto;
+                page-break-inside: avoid;
+            }
+            .print-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                page-break-after: always;
+            }
+            .fold-line {
+                display: block !important;
+                width: 100%;
+                text-align: center;
+                margin: 0.05in 0;
+                position: relative;
+            }
+            .fold-line::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 50%;
+                border-top: 2px dashed #999;
+                z-index: 0;
+            }
+            .fold-line span {
+                background: white;
+                padding: 0 10px;
+                font-size: 10px;
+                color: #666;
+                position: relative;
+                z-index: 1;
+            }
+            .blank-card {
+                display: block !important;
+                background: white;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+            }
+            /* Only show official deck list when explicitly printing it */
+            body.printing-official #officialDeckList {
+                display: block !important;
+                page-break-after: always;
+            }
+            body.printing-official #prizeCardWrapper {
+                display: none !important;
+            }
+        }
+
+        .save-load {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background: #666;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .file-label:hover {
+            background: #555;
+        }
+
+        .fold-line {
+            display: none;
+        }
+
+        .blank-card {
+            display: none;
+        }
+
+        .font-control {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .font-control label {
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .font-control input {
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        .customize-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .customize-section:last-child {
+            border-bottom: none;
+        }
+
+        .customize-section h4 {
+            color: #e3350d;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-customize-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .toggle-customize-btn:hover {
+            background: #5568d3;
+        }
+
+        @media print {
+            .customize-panel {
+                display: none !important;
+            }
+        }
+
+        .import-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .player-info-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .player-info-section h3 {
+            color: #e3350d;
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-row-full {
+            margin-bottom: 15px;
+        }
+
+        button.tertiary {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.tertiary:hover {
+            background: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>🎴 Prize Tracker Creator</h1>
+            
+            <div class="form-group">
+                <label>Card Size</label>
+                <select id="cardSize" onchange="toggleCustomSize()">
+                    <option value="5x3">5" × 3" (Index Card)</option>
+                    <option value="3x5">3" × 5" (Index Card)</option>
+                    <option value="poker">2.5" × 3.5" (Poker Card)</option>
+                    <option value="4x6">4" × 6" (Postcard)</option>
+                    <option value="letter">8.5" × 11" (Letter)</option>
+                    <option value="a4">A4 (8.27" × 11.69")</option>
+                    <option value="custom" selected>Custom Size</option>
+                </select>
+            </div>
+
+            <div id="customSizeInputs" style="display: block; margin-bottom: 20px;">
+                <label>Custom Dimensions</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <input type="number" id="customWidth" placeholder="Width" min="2" max="20" step="0.1" value="5" style="width: 100%;" oninput="applyCustomSize()">
+                        <span style="font-size: 11px; color: #666;">Width (2-20 inches)</span>
+                    </div>
+                    <div>
+                        <input type="number" id="customHeight" placeholder="Height" min="2" max="20" step="0.1" value="3" style="width: 100%;" oninput="applyCustomSize()">
+                        <span style="font-size: 11px; color: #666;">Height (2-20 inches)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Orientation</label>
+                <select id="orientation">
+                    <option value="landscape">Landscape</option>
+                    <option value="portrait">Portrait</option>
+                </select>
+            </div>
+
+            <div class="import-section">
+                <h3>Import Deck List</h3>
+                <textarea id="deckListInput" placeholder="Paste your Pokémon TCG Live deck list here..."></textarea>
+                <div style="margin: 10px 0;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: normal;">
+                        <input type="checkbox" id="combineVariants" checked style="width: auto;" onchange="reprocessImport()">
+                        Combine same card from different sets/variants in prize card
+                    </label>
+                </div>
+                <button class="secondary" onclick="toggleDeckListPanel()">📋 Show Decklist</button>
+                <button class="primary" onclick="importDeckList()">📥 Import Deck</button>
+            </div>
+
+            <div class="player-info-section">
+                <h3>Player Information</h3>
+                <div class="form-row-full">
+                    <label>Deck Name</label>
+                    <input type="text" id="deckName" placeholder="Enter deck name (e.g., Dragapult Control)">
+                </div>
+                <div class="form-row-full">
+                    <label>Player Name</label>
+                    <input type="text" id="playerName" placeholder="Enter player name">
+                </div>
+                <div class="form-row-full">
+                    <label>Player ID</label>
+                    <input type="text" id="playerId" placeholder="Enter player ID">
+                </div>
+                <div class="form-row-full">
+                    <label>Date of Birth</label>
+                    <input type="text" id="playerDob" placeholder="MM/DD/YYYY" maxlength="10" oninput="formatDOB(this)">
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Age Division</label>
+                        <select id="ageDivision">
+                            <option value="">Select Division</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Senior">Senior</option>
+                            <option value="Masters">Masters</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Format</label>
+                        <select id="format">
+                            <option value="">Select Format</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Expanded">Expanded</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-full">
+                    <label>Deck List Paper Size</label>
+                    <select id="deckListPaperSize">
+                        <option value="letter">Letter (8.5" × 11")</option>
+                        <option value="a4">A4 (8.27" × 11.69")</option>
+                        <option value="legal">Legal (8.5" × 14")</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="tertiary" onclick="printOfficialDeckList()">📋 Print Official Deck List</button>
+            <button class="primary" onclick="printPrizeCard()">🖨️ Print Prize Tracker</button>
+
+            <div class="save-load">
+                <h3>Save / Load Deck</h3>
+                <button class="secondary" onclick="saveDeck()">💾 Save Deck</button>
+                <label for="loadDeck" class="file-label">📂 Load Deck</label>
+                <input type="file" id="loadDeck" class="file-input" accept=".json" onchange="loadDeck(event)">
+                <button class="secondary" onclick="clearDeck()" style="background: #f44336;">🗑️ Clear All</button>
+            </div>
+
+            <button class="toggle-customize-btn" onclick="toggleCustomize()">🎨 Customize Fonts</button>
+        </div>
+
+        <div class="deck-list-panel" id="deckListPanel">
+            <h3>📋 Deck List</h3>
+            <div id="deckListDisplay"></div>
+        </div>
+
+        <div class="preview-area">
+            <h2>Preview</h2>
+            
+            <!-- Official Deck List -->
+            <div id="officialDeckList" class="official-decklist">
+                <div class="player-info">
+                    <div class="player-info-field">
+                        <label>Player Name:</label>
+                        <div class="value" id="displayPlayerName"></div>
+                    </div>
+                    <div class="player-info-field">
+                        <label>Player ID:</label>
+                        <div class="value" id="displayPlayerId"></div>
+                    </div>
+                    <div class="player-info-field">
+                        <label>Birthdate (MM/DD/YYYY):</label>
+                        <div class="value" id="displayPlayerDob"></div>
+                    </div>
+                    <div class="player-info-field">
+                        <label>Division:</label>
+                        <div class="value" id="displayAgeDivision"></div>
+                    </div>
+                    <div class="player-info-field">
+                        <label>Format:</label>
+                        <div class="value" id="displayFormat"></div>
+                    </div>
+                    <div class="player-info-field">
+                        <label>Date:</label>
+                        <div class="value" id="displayDate"></div>
+                    </div>
+                </div>
+
+                <div id="officialDeckContent"></div>
+            </div>
+
+            <!-- Prize Card Preview -->
+            <div class="print-wrapper" id="prizeCardWrapper">
+                <div id="blankCard" class="blank-card card-preview card-5x3-landscape"></div>
+                <div class="fold-line"><span>✂️ FOLD HERE ✂️</span></div>
+                <div id="cardPreview" class="card-preview card-5x3-landscape">
+                    <div class="card-header">DECK & PRIZE TRACKER</div>
+                    <div id="cardContent"></div>
+                    <div class="card-footer"># = deck count • P = prized</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="customize-panel" id="customizePanel">
+            <h2>🎨 Font Customization</h2>
+            
+            <div class="customize-section">
+                <h4>Main Title</h4>
+                <div class="font-control">
+                    <label>Title Font Size</label>
+                    <input type="number" id="fontTitle" value="10" min="6" max="24" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Title Color</label>
+                    <input type="color" id="colorTitle" value="#e3350d" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Title Underline Color</label>
+                    <input type="color" id="colorTitleUnderline" value="#e3350d" oninput="updateFonts()">
+                </div>
+            </div>
+
+            <div class="customize-section">
+                <h4>Pokémon Section</h4>
+                <div class="font-control">
+                    <label>Section Title</label>
+                    <input type="number" id="fontPokemonTitle" value="9" min="6" max="20" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Card Names</label>
+                    <input type="number" id="fontPokemonCards" value="7" min="4" max="16" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Count Boxes</label>
+                    <input type="number" id="fontPokemonCount" value="7" min="4" max="16" step="0.5" oninput="updateFonts()">
+                </div>
+            </div>
+
+            <div class="customize-section">
+                <h4>Trainer Section</h4>
+                <div class="font-control">
+                    <label>Section Title</label>
+                    <input type="number" id="fontTrainerTitle" value="9" min="6" max="20" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Card Names</label>
+                    <input type="number" id="fontTrainerCards" value="7" min="4" max="16" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Count Boxes</label>
+                    <input type="number" id="fontTrainerCount" value="7" min="4" max="16" step="0.5" oninput="updateFonts()">
+                </div>
+            </div>
+
+            <div class="customize-section">
+                <h4>Energy Section</h4>
+                <div class="font-control">
+                    <label>Section Title</label>
+                    <input type="number" id="fontEnergyTitle" value="9" min="6" max="20" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Card Names</label>
+                    <input type="number" id="fontEnergyCards" value="7" min="4" max="16" step="0.5" oninput="updateFonts()">
+                </div>
+                <div class="font-control">
+                    <label>Count Boxes</label>
+                    <input type="number" id="fontEnergyCount" value="7" min="4" max="16" step="0.5" oninput="updateFonts()">
+                </div>
+            </div>
+
+            <button class="secondary" onclick="resetFonts()">↺ Reset to Defaults</button>
+        </div>
+    </div>
+
+    <script>
+        let deckData = {
+            pokemon: [],
+            trainer: [],
+            energy: []
+        };
+
+        let lastImportedText = ''; // Store the last imported deck list
+        let customDimensions = { width: 5, height: 3 }; // Store custom dimensions
+
+        function formatDOB(input) {
+            // Store cursor position
+            let cursorPos = input.selectionStart;
+            let value = input.value;
+            
+            // Remove non-digits
+            let cleaned = value.replace(/\D/g, '');
+            
+            // Format with slashes
+            let formatted = '';
+            if (cleaned.length > 0) {
+                formatted = cleaned.slice(0, 2);
+                if (cleaned.length >= 3) {
+                    formatted += '/' + cleaned.slice(2, 4);
+                }
+                if (cleaned.length >= 5) {
+                    formatted += '/' + cleaned.slice(4, 8);
+                }
+            }
+            
+            input.value = formatted;
+            
+            // Adjust cursor position to account for slashes
+            // Count how many slashes are before the cursor
+            let slashesBeforeCursor = formatted.slice(0, cursorPos).split('/').length - 1;
+            let digitsBeforeCursor = value.slice(0, cursorPos).replace(/\D/g, '').length;
+            
+            // Calculate new cursor position
+            let newCursorPos = digitsBeforeCursor;
+            if (digitsBeforeCursor > 2) newCursorPos++;
+            if (digitsBeforeCursor > 4) newCursorPos++;
+            
+            // Set cursor position
+            setTimeout(() => {
+                input.setSelectionRange(newCursorPos, newCursorPos);
+            }, 0);
+        }
+
+        function printOfficialDeckList() {
+            // Validate player information
+            const playerName = document.getElementById('playerName').value;
+            const playerId = document.getElementById('playerId').value;
+            const playerDob = document.getElementById('playerDob').value;
+            const ageDivision = document.getElementById('ageDivision').value;
+            const format = document.getElementById('format').value;
+
+            if (!playerName || !playerId || !playerDob || !ageDivision || !format) {
+                alert('Please fill in all player information fields before printing the official deck list.');
+                return;
+            }
+
+            // Validate DOB format
+            const dobRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+            if (!dobRegex.test(playerDob)) {
+                alert('Please enter Date of Birth in MM/DD/YYYY format.');
+                return;
+            }
+
+            // Get selected paper size
+            const paperSize = document.getElementById('deckListPaperSize').value;
+            const officialList = document.getElementById('officialDeckList');
+            
+            // Apply paper size class
+            officialList.className = `official-decklist paper-${paperSize}`;
+
+            // Update official deck list display
+            document.getElementById('displayPlayerName').textContent = playerName;
+            document.getElementById('displayPlayerId').textContent = playerId;
+            document.getElementById('displayPlayerDob').textContent = playerDob;
+            document.getElementById('displayAgeDivision').textContent = ageDivision;
+            document.getElementById('displayFormat').textContent = format;
+            
+            // Set current date
+            const today = new Date();
+            const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                          today.getDate().toString().padStart(2, '0') + '/' + 
+                          today.getFullYear();
+            document.getElementById('displayDate').textContent = dateStr;
+
+            // Build official deck list content
+            let html = '';
+            let totalCards = 0;
+
+            ['pokemon', 'trainer', 'energy'].forEach(type => {
+                const cards = deckData[type].filter(card => card.name.trim() !== '');
+                if (cards.length === 0) return;
+
+                const title = type === 'pokemon' ? 'Pokemon' : type.charAt(0).toUpperCase() + type.slice(1);
+                const sectionTotal = cards.reduce((sum, card) => sum + parseInt(card.count || 0), 0);
+                totalCards += sectionTotal;
+
+                html += `<div class="official-section">
+                    <div class="official-section-title">${title} (${sectionTotal})</div>
+                    <div class="official-card-list">`;
+
+                cards.forEach(card => {
+                    // Only show set/number for Pokemon
+                    const setInfo = (type === 'pokemon' && card.setCode && card.setNumber) ? 
+                        `${card.setCode}-${card.setNumber}` : '';
+                    html += `<div class="official-card-item">
+                        <span class="official-card-count">${card.count}</span>
+                        <span class="official-card-name">${card.name}</span>
+                        <span class="official-card-set">${setInfo}</span>
+                    </div>`;
+                });
+
+                html += '</div></div>';
+            });
+
+            html += `<div class="official-total">Total: ${totalCards}</div>`;
+            
+            // Add Administrative Use Only box
+            html += `<div class="admin-box">
+                <div class="admin-box-title">Administrative Use Only</div>
+            </div>`;
+            
+            document.getElementById('officialDeckContent').innerHTML = html;
+
+            // Hide prize card, show official list
+            document.body.classList.add('printing-official');
+            document.getElementById('prizeCardWrapper').style.display = 'none';
+            document.getElementById('officialDeckList').style.display = 'block';
+
+            // Print
+            setTimeout(() => {
+                window.print();
+                // Restore after print
+                document.body.classList.remove('printing-official');
+                document.getElementById('prizeCardWrapper').style.display = 'flex';
+                document.getElementById('officialDeckList').style.display = 'none';
+            }, 100);
+        }
+
+        function printPrizeCard() {
+            // Ensure we're not in official printing mode
+            document.body.classList.remove('printing-official');
+            
+            // Hide official deck list for printing, but keep deck list panel visible on screen
+            document.getElementById('officialDeckList').style.display = 'none';
+            
+            window.print();
+        }
+
+        function toggleDeckListPanel() {
+            const panel = document.getElementById('deckListPanel');
+            panel.classList.toggle('active');
+        }
+
+        function toggleCustomize() {
+            const panel = document.getElementById('customizePanel');
+            const container = document.querySelector('.container');
+            panel.classList.toggle('active');
+            container.classList.toggle('customize-active');
+        }
+
+        function updateFonts() {
+            const preview = document.getElementById('cardPreview');
+            
+            // Main title
+            const titleSize = document.getElementById('fontTitle').value;
+            const titleColor = document.getElementById('colorTitle').value;
+            const titleUnderlineColor = document.getElementById('colorTitleUnderline').value;
+            const titleElements = preview.querySelectorAll('.card-header');
+            titleElements.forEach(el => {
+                el.style.fontSize = `${titleSize}px`;
+                el.style.color = titleColor;
+                el.style.borderBottomColor = titleUnderlineColor;
+            });
+            
+            // Get font sizes
+            const pokemonTitleSize = document.getElementById('fontPokemonTitle').value;
+            const pokemonCardSize = document.getElementById('fontPokemonCards').value;
+            const pokemonCountSize = document.getElementById('fontPokemonCount').value;
+            
+            const trainerTitleSize = document.getElementById('fontTrainerTitle').value;
+            const trainerCardSize = document.getElementById('fontTrainerCards').value;
+            const trainerCountSize = document.getElementById('fontTrainerCount').value;
+            
+            const energyTitleSize = document.getElementById('fontEnergyTitle').value;
+            const energyCardSize = document.getElementById('fontEnergyCards').value;
+            const energyCountSize = document.getElementById('fontEnergyCount').value;
+            
+            // Apply styles to sections
+            const sections = preview.querySelectorAll('.section');
+            sections.forEach((section) => {
+                const sectionTitle = section.querySelector('.section-title');
+                const cardNames = section.querySelectorAll('.card-name');
+                const countBoxes = section.querySelectorAll('.count-box, .prize-box');
+                
+                if (sectionTitle) {
+                    const titleText = sectionTitle.textContent.trim().toUpperCase();
+                    
+                    if (titleText === 'POKÉMON') {
+                        sectionTitle.style.fontSize = `${pokemonTitleSize}px`;
+                        cardNames.forEach(el => el.style.fontSize = `${pokemonCardSize}px`);
+                        countBoxes.forEach(el => el.style.fontSize = `${pokemonCountSize}px`);
+                    } else if (titleText === 'TRAINER') {
+                        sectionTitle.style.fontSize = `${trainerTitleSize}px`;
+                        cardNames.forEach(el => el.style.fontSize = `${trainerCardSize}px`);
+                        countBoxes.forEach(el => el.style.fontSize = `${trainerCountSize}px`);
+                    } else if (titleText === 'ENERGY') {
+                        sectionTitle.style.fontSize = `${energyTitleSize}px`;
+                        cardNames.forEach(el => el.style.fontSize = `${energyCardSize}px`);
+                        countBoxes.forEach(el => el.style.fontSize = `${energyCountSize}px`);
+                    }
+                }
+            });
+        }
+
+        function resetFonts() {
+            document.getElementById('fontTitle').value = 10;
+            document.getElementById('colorTitle').value = '#e3350d';
+            document.getElementById('colorTitleUnderline').value = '#e3350d';
+            document.getElementById('fontPokemonTitle').value = 9;
+            document.getElementById('fontPokemonCards').value = 7;
+            document.getElementById('fontPokemonCount').value = 7;
+            document.getElementById('fontTrainerTitle').value = 9;
+            document.getElementById('fontTrainerCards').value = 7;
+            document.getElementById('fontTrainerCount').value = 7;
+            document.getElementById('fontEnergyTitle').value = 9;
+            document.getElementById('fontEnergyCards').value = 7;
+            document.getElementById('fontEnergyCount').value = 7;
+            updateFonts();
+        }
+
+        function toggleCustomSize() {
+            const sizeSelect = document.getElementById('cardSize');
+            const customInputs = document.getElementById('customSizeInputs');
+            
+            if (sizeSelect.value === 'custom') {
+                customInputs.style.display = 'block';
+            } else {
+                customInputs.style.display = 'none';
+                renderPreview();
+            }
+        }
+
+        function applyCustomSize() {
+            const width = parseFloat(document.getElementById('customWidth').value);
+            const height = parseFloat(document.getElementById('customHeight').value);
+            
+            // Only validate and update if both values are valid numbers
+            if (isNaN(width) || isNaN(height)) {
+                return; // Don't update if values are invalid
+            }
+            
+            // Clamp values to valid range
+            const clampedWidth = Math.max(2, Math.min(20, width));
+            const clampedHeight = Math.max(2, Math.min(20, height));
+            
+            // Update input values if they were clamped
+            if (width !== clampedWidth) {
+                document.getElementById('customWidth').value = clampedWidth;
+            }
+            if (height !== clampedHeight) {
+                document.getElementById('customHeight').value = clampedHeight;
+            }
+            
+            customDimensions.width = clampedWidth;
+            customDimensions.height = clampedHeight;
+            renderPreview();
+        }
+
+        function addCard(type) {
+            deckData[type].push({ name: '', setCode: '', setNumber: '', count: '1', prize: '' });
+            renderCards();
+        }
+
+        function removeCard(type, index) {
+            deckData[type].splice(index, 1);
+            renderCards();
+        }
+
+        function updateCard(type, index, field, value) {
+            deckData[type][index][field] = value;
+            renderPreview();
+        }
+
+        function clearDeck() {
+            if (confirm('Are you sure you want to clear all data and reset to defaults?')) {
+                // Clear deck data
+                deckData = { pokemon: [], trainer: [], energy: [] };
+                lastImportedText = '';
+                
+                // Clear deck list input
+                document.getElementById('deckListInput').value = '';
+                
+                // Reset card settings to defaults
+                document.getElementById('cardSize').value = 'custom';
+                document.getElementById('customWidth').value = 5;
+                document.getElementById('customHeight').value = 3;
+                customDimensions = { width: 5, height: 3 };
+                document.getElementById('customSizeInputs').style.display = 'block';
+                document.getElementById('orientation').value = 'landscape';
+                document.getElementById('combineVariants').checked = true;
+                
+                // Clear player information
+                document.getElementById('deckName').value = '';
+                document.getElementById('playerName').value = '';
+                document.getElementById('playerId').value = '';
+                document.getElementById('playerDob').value = '';
+                document.getElementById('ageDivision').value = '';
+                document.getElementById('format').value = '';
+                document.getElementById('deckListPaperSize').value = 'letter';
+                
+                // Reset font settings to defaults
+                document.getElementById('fontTitle').value = 10;
+                document.getElementById('colorTitle').value = '#e3350d';
+                document.getElementById('colorTitleUnderline').value = '#e3350d';
+                document.getElementById('fontPokemonTitle').value = 9;
+                document.getElementById('fontPokemonCards').value = 7;
+                document.getElementById('fontPokemonCount').value = 7;
+                document.getElementById('fontTrainerTitle').value = 9;
+                document.getElementById('fontTrainerCards').value = 7;
+                document.getElementById('fontTrainerCount').value = 7;
+                document.getElementById('fontEnergyTitle').value = 9;
+                document.getElementById('fontEnergyCards').value = 7;
+                document.getElementById('fontEnergyCount').value = 7;
+                
+                // Re-render everything
+                renderCards();
+            }
+        }
+
+        function reprocessImport() {
+            if (lastImportedText) {
+                document.getElementById('deckListInput').value = lastImportedText;
+                importDeckList();
+            }
+        }
+
+        function importDeckList() {
+            const input = document.getElementById('deckListInput').value;
+            if (!input.trim()) {
+                alert('Please paste a deck list first!');
+                return;
+            }
+
+            // Store the import for reprocessing
+            lastImportedText = input;
+
+            const combineVariants = document.getElementById('combineVariants').checked;
+
+            // Clear existing deck
+            deckData = { pokemon: [], trainer: [], energy: [] };
+
+            // Temporary storage for all parsed cards
+            const allCards = [];
+
+            // Parse deck list
+            const lines = input.split('\n');
+            let currentSection = '';
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                // Detect section headers
+                if (line.match(/^Pokémon:/i)) {
+                    currentSection = 'pokemon';
+                    continue;
+                } else if (line.match(/^Trainer:/i)) {
+                    currentSection = 'trainer';
+                    continue;
+                } else if (line.match(/^Energy:/i)) {
+                    currentSection = 'energy';
+                    continue;
+                }
+                
+                // Skip section headers with just numbers
+                if (line.match(/^(Pokémon|Trainer|Energy):\s*\d+$/i)) continue;
+                
+                // Match pattern: "* 2 Card Name SET 123" or "2 Card Name PR-SV 123 PH"
+                // Updated to handle set codes with hyphens like PR-SV
+                const match = line.match(/^\*?\s*(\d+)\s+(.+?)(?:\s+([A-Z]{2,}(?:-[A-Z]{2,})?)\s+(\d+)(\s+PH)?)?$/i);
+                
+                if (match) {
+                    const count = parseInt(match[1]);
+                    let cardName = match[2].trim();
+                    const setCode = match[3] || '';
+                    const setNumber = match[4] || '';
+                    const isPH = match[5] ? true : false;
+                    
+                    // Clean up card name - remove any trailing set info that wasn't captured
+                    cardName = cardName.replace(/\s+[A-Z]{2,}\s+\d+(?:\s+PH)?\s*$/i, '').trim();
+                    
+                    // Determine card type based on current section first, then fallback to detection
+                    let cardType = currentSection;
+                    
+                    if (!cardType) {
+                        // Fallback detection if no section header found
+                        if (cardName.includes('Energy') || /^Basic\s+\{[A-Z]\}\s+Energy$/i.test(cardName)) {
+                            cardType = 'energy';
+                        } else if (isTrainerCard(cardName)) {
+                            cardType = 'trainer';
+                        } else {
+                            cardType = 'pokemon';
+                        }
+                    }
+                    
+                    allCards.push({
+                        name: cardName,
+                        count: count,
+                        type: cardType,
+                        setCode: setCode,
+                        setNumber: setNumber,
+                        isPH: isPH
+                    });
+                }
+            }
+            
+            // Process cards - always store set info in deckData
+            if (combineVariants) {
+                // Combine all cards with same name for display in prize card
+                const cardMap = new Map();
+                
+                for (let card of allCards) {
+                    const cardKey = `${card.name}|${card.type}`;
+                    
+                    if (cardMap.has(cardKey)) {
+                        cardMap.get(cardKey).count += card.count;
+                    } else {
+                        cardMap.set(cardKey, {
+                            name: card.name,
+                            count: card.count,
+                            type: card.type,
+                            setCode: card.setCode,
+                            setNumber: card.setNumber,
+                            isPH: card.isPH
+                        });
+                    }
+                }
+                
+                for (let card of cardMap.values()) {
+                    deckData[card.type].push({
+                        name: card.name,
+                        setCode: card.setCode,
+                        setNumber: card.setNumber,
+                        count: card.count.toString(),
+                        prize: ''
+                    });
+                }
+            } else {
+                // Keep all variants separate
+                for (let card of allCards) {
+                    deckData[card.type].push({
+                        name: card.name,
+                        setCode: card.setCode,
+                        setNumber: card.setNumber,
+                        count: card.count.toString(),
+                        prize: ''
+                    });
+                }
+            }
+            
+            renderCards();
+            alert('Deck imported! Please review and adjust if needed.');
+        }
+
+        function isTrainerCard(cardName) {
+            // Comprehensive list of trainer card keywords and common trainer cards
+            const trainerKeywords = [
+                // Supporter keywords
+                'Professor', 'Boss', 'Research', 'Orders', 'Iono', 'Arven', 'Hilda',
+                'Crispin', 'Marnie', 'Sonia', 'Nessa', 'Leon', 'Raihan', 'Serena',
+                'Melony', 'Gloria', 'Klara', 'Avery', 'Peony', 'Zinnia', 'Roxanne',
+                'Gardenia', 'Shauna', 'Sycamore', 'Colress', 'Guzma', 'Cynthia',
+                'Judge', 'Copycat', 'Tate & Liza', 'Steven',
+                
+                // Item keywords
+                'Ball', 'Switch', 'Potion', 'Rod', 'Search', 'Nest', 'Ultra',
+                'Great', 'Quick', 'Repeat', 'Timer', 'Dusk', 'Dive', 'Net',
+                'Level', 'Luxury', 'Master', 'Premier', 'Heavy', 'Lure',
+                'Town Map', 'Poké Gear', 'Vs Seeker', 'Computer Search',
+                'Rare Candy', 'Energy Search', 'Energy Retrieval', 'Energy Loto',
+                'Potion', 'Super Potion', 'Hyper Potion', 'Max Potion', 'Full Heal',
+                'Revive', 'Max Revive', 'Escape Rope', 'Field Blower',
+                'Choice Band', 'Muscle Band', 'Float Stone', 'Exp. Share',
+                'Tool Jammer', 'Tool Scrapper', 'Crushing Hammer', 'Enhanced Hammer',
+                'Counter Gain', 'Counter Catcher', 'Acro Bike', 'Bicycle',
+                'Pal Pad', 'Dowsing Machine', 'Scoop Up', 'Max Elixir',
+                'Battle Compressor', 'Trainers\' Mail', 'Random Receiver',
+                'Town Map', 'Pokédex', 'Old Amber', 'Technical Machine',
+                'Buddy-Buddy Poffin', 'Earthen Vessel', 'Night Stretcher',
+                'Bravery Charm', 'Protective Goggles', 'Precious Trolley',
+                'Boss\'s Orders', 'Professor\'s Research',
+                
+                // Stadium keywords
+                'Stadium', 'Gym', 'Tower', 'Center', 'Path', 'Shrine', 'Temple',
+                'Forest', 'Cave', 'Colosseum', 'Village', 'Lively Stadium',
+                'Training Court', 'Mesagoza', 'Beach Court',
+                
+                // Tool keywords  
+                'Belt', 'Specs', 'Scope', 'Charm', 'Goggles', 'Guard', 'Cloak',
+                'Cape', 'Helmet', 'Vest', 'Boots', 'Tool', 'Trolley'
+            ];
+            
+            // Check if card name contains any trainer keywords
+            return trainerKeywords.some(keyword => 
+                cardName.toLowerCase().includes(keyword.toLowerCase())
+            );
+        }
+
+        function renderCards() {
+            updateDeckListDisplay();
+            renderPreview();
+        }
+
+        function updateDeckListDisplay() {
+            const panel = document.getElementById('deckListPanel');
+            const display = document.getElementById('deckListDisplay');
+            
+            // Check if there are any cards
+            const hasCards = deckData.pokemon.length > 0 || deckData.trainer.length > 0 || deckData.energy.length > 0;
+            
+            // Show panel if it has cards OR if user has manually toggled it on
+            if (hasCards) {
+                panel.classList.add('active');
+            }
+            // If no cards but panel is already visible, keep it visible (user toggled it)
+            // Only auto-hide is not needed anymore since user controls visibility
+            
+            let html = '';
+            let totalCards = 0;
+            
+            // Pokémon section
+            if (deckData.pokemon.length > 0 || true) {
+                const pokemonCount = deckData.pokemon.reduce((sum, card) => sum + parseInt(card.count || 0), 0);
+                totalCards += pokemonCount;
+                html += `<div class="deck-list-section">
+                    <h4>
+                        <span>Pokémon (${pokemonCount})</span>
+                        <button class="add-section-btn" onclick="addCard('pokemon')" title="Add Pokémon">+</button>
+                    </h4>
+                    <div class="deck-list-headers">
+                        <div>Name:</div>
+                        <div>Set:</div>
+                        <div>Coll. #:</div>
+                        <div>Qty:</div>
+                        <div></div>
+                    </div>`;
+                deckData.pokemon.forEach((card, index) => {
+                    if (card.name.trim() || card.count) {
+                        html += `<div class="deck-list-item">
+                            <input type="text" value="${card.name}" 
+                                onchange="updateCard('pokemon', ${index}, 'name', this.value)"
+                                oninput="updateCard('pokemon', ${index}, 'name', this.value)"
+                                placeholder="Card name">
+                            <input type="text" value="${card.setCode || ''}" 
+                                onchange="updateCard('pokemon', ${index}, 'setCode', this.value)"
+                                oninput="updateCard('pokemon', ${index}, 'setCode', this.value)"
+                                placeholder="Set"
+                                style="text-transform: uppercase;">
+                            <input type="text" value="${card.setNumber || ''}" 
+                                onchange="updateCard('pokemon', ${index}, 'setNumber', this.value)"
+                                oninput="updateCard('pokemon', ${index}, 'setNumber', this.value)"
+                                placeholder="No.">
+                            <input type="number" value="${card.count}" min="1" max="99" 
+                                onchange="updateCard('pokemon', ${index}, 'count', this.value)">
+                            <span class="remove-icon" onclick="removeCard('pokemon', ${index})" title="Remove">×</span>
+                        </div>`;
+                    }
+                });
+                html += '</div>';
+            }
+            
+            // Trainer section
+            if (deckData.trainer.length > 0 || true) {
+                const trainerCount = deckData.trainer.reduce((sum, card) => sum + parseInt(card.count || 0), 0);
+                totalCards += trainerCount;
+                html += `<div class="deck-list-section">
+                    <h4>
+                        <span>Trainer (${trainerCount})</span>
+                        <button class="add-section-btn" onclick="addCard('trainer')" title="Add Trainer">+</button>
+                    </h4>
+                    <div class="deck-list-headers">
+                        <div>Name:</div>
+                        <div>Set:</div>
+                        <div>Coll. #:</div>
+                        <div>Qty:</div>
+                        <div></div>
+                    </div>`;
+                deckData.trainer.forEach((card, index) => {
+                    if (card.name.trim() || card.count) {
+                        html += `<div class="deck-list-item">
+                            <input type="text" value="${card.name}" 
+                                onchange="updateCard('trainer', ${index}, 'name', this.value)"
+                                oninput="updateCard('trainer', ${index}, 'name', this.value)"
+                                placeholder="Card name">
+                            <input type="text" value="${card.setCode || ''}" 
+                                onchange="updateCard('trainer', ${index}, 'setCode', this.value)"
+                                oninput="updateCard('trainer', ${index}, 'setCode', this.value)"
+                                placeholder="Set"
+                                style="text-transform: uppercase;">
+                            <input type="text" value="${card.setNumber || ''}" 
+                                onchange="updateCard('trainer', ${index}, 'setNumber', this.value)"
+                                oninput="updateCard('trainer', ${index}, 'setNumber', this.value)"
+                                placeholder="No.">
+                            <input type="number" value="${card.count}" min="1" max="99" 
+                                onchange="updateCard('trainer', ${index}, 'count', this.value)">
+                            <span class="remove-icon" onclick="removeCard('trainer', ${index})" title="Remove">×</span>
+                        </div>`;
+                    }
+                });
+                html += '</div>';
+            }
+            
+            // Energy section
+            if (deckData.energy.length > 0 || true) {
+                const energyCount = deckData.energy.reduce((sum, card) => sum + parseInt(card.count || 0), 0);
+                totalCards += energyCount;
+                html += `<div class="deck-list-section">
+                    <h4>
+                        <span>Energy (${energyCount})</span>
+                        <button class="add-section-btn" onclick="addCard('energy')" title="Add Energy">+</button>
+                    </h4>
+                    <div class="deck-list-headers">
+                        <div>Name:</div>
+                        <div>Set:</div>
+                        <div>Coll. #:</div>
+                        <div>Qty:</div>
+                        <div></div>
+                    </div>`;
+                deckData.energy.forEach((card, index) => {
+                    if (card.name.trim() || card.count) {
+                        html += `<div class="deck-list-item">
+                            <input type="text" value="${card.name}" 
+                                onchange="updateCard('energy', ${index}, 'name', this.value)"
+                                oninput="updateCard('energy', ${index}, 'name', this.value)"
+                                placeholder="Card name">
+                            <input type="text" value="${card.setCode || ''}" 
+                                onchange="updateCard('energy', ${index}, 'setCode', this.value)"
+                                oninput="updateCard('energy', ${index}, 'setCode', this.value)"
+                                placeholder="Set"
+                                style="text-transform: uppercase;">
+                            <input type="text" value="${card.setNumber || ''}" 
+                                onchange="updateCard('energy', ${index}, 'setNumber', this.value)"
+                                oninput="updateCard('energy', ${index}, 'setNumber', this.value)"
+                                placeholder="No.">
+                            <input type="number" value="${card.count}" min="1" max="99" 
+                                onchange="updateCard('energy', ${index}, 'count', this.value)">
+                            <span class="remove-icon" onclick="removeCard('energy', ${index})" title="Remove">×</span>
+                        </div>`;
+                    }
+                });
+                html += '</div>';
+            }
+            
+            // Total
+            html += `<div class="deck-total">Total Cards: ${totalCards}</div>`;
+            
+            display.innerHTML = html;
+        }
+
+        function renderPreview() {
+            const size = document.getElementById('cardSize').value;
+            const orientation = document.getElementById('orientation').value;
+            const preview = document.getElementById('cardPreview');
+            const blankCard = document.getElementById('blankCard');
+            
+            // Handle custom size
+            if (size === 'custom') {
+                preview.className = `card-preview card-custom-${orientation}`;
+                blankCard.className = `blank-card card-preview card-custom-${orientation}`;
+                if (orientation === 'landscape') {
+                    preview.style.width = `${customDimensions.width}in`;
+                    preview.style.height = `${customDimensions.height}in`;
+                    blankCard.style.width = `${customDimensions.width}in`;
+                    blankCard.style.height = `${customDimensions.height}in`;
+                } else {
+                    preview.style.width = `${customDimensions.height}in`;
+                    preview.style.height = `${customDimensions.width}in`;
+                    blankCard.style.width = `${customDimensions.height}in`;
+                    blankCard.style.height = `${customDimensions.width}in`;
+                }
+            } else {
+                preview.className = `card-preview card-${size}-${orientation}`;
+                blankCard.className = `blank-card card-preview card-${size}-${orientation}`;
+                preview.style.width = '';
+                preview.style.height = '';
+                blankCard.style.width = '';
+                blankCard.style.height = '';
+            }
+            
+            // Update card header with deck name
+            const deckName = document.getElementById('deckName').value;
+            const headerText = deckName ? `${deckName.toUpperCase()} PRIZE TRACKER` : 'DECK & PRIZE TRACKER';
+            const cardHeader = preview.querySelector('.card-header');
+            if (cardHeader) {
+                cardHeader.textContent = headerText;
+            }
+            
+            const content = document.getElementById('cardContent');
+            const isLandscape = orientation === 'landscape' && (size === '5x3' || size === '3x5' || size === '4x6' || size === 'custom');
+            const columnClass = isLandscape ? 'two-col' : 'one-col';
+            const combineVariants = document.getElementById('combineVariants').checked;
+            
+            let html = '';
+            
+            ['pokemon', 'trainer', 'energy'].forEach(type => {
+                // Filter out empty cards
+                const cards = deckData[type].filter(card => card.name.trim() !== '');
+                
+                if (cards.length === 0) return;
+                
+                const title = type === 'pokemon' ? 'Pokémon' : type.charAt(0).toUpperCase() + type.slice(1);
+                html += `<div class="section">
+                    <div class="section-title">${title.toUpperCase()}</div>
+                    <div class="column-headers ${columnClass}">
+                        <div>CARD NAME</div><div>#</div><div>P</div>
+                        ${isLandscape ? '<div>CARD NAME</div><div>#</div><div>P</div>' : ''}
+                    </div>
+                    <div class="decklist ${columnClass}">`;
+                
+                cards.forEach(card => {
+                    // Determine card display name based on combine checkbox
+                    let displayName = card.name;
+                    if (!combineVariants && card.setCode && card.setNumber) {
+                        displayName = `${card.name} ${card.setCode} ${card.setNumber}`;
+                    }
+                    
+                    html += `
+                        <div class="card-name">${displayName}</div>
+                        <div class="count-box">${card.count}</div>
+                        <div class="prize-box">${card.prize}</div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            content.innerHTML = html;
+            
+            // Apply custom fonts after rendering
+            updateFonts();
+        }
+
+        function saveDeck() {
+            // Gather all data to save
+            const saveData = {
+                deckData: deckData,
+                cardSize: document.getElementById('cardSize').value,
+                customDimensions: customDimensions,
+                orientation: document.getElementById('orientation').value,
+                combineVariants: document.getElementById('combineVariants').checked,
+                playerInfo: {
+                    deckName: document.getElementById('deckName').value,
+                    name: document.getElementById('playerName').value,
+                    id: document.getElementById('playerId').value,
+                    dob: document.getElementById('playerDob').value,
+                    ageDivision: document.getElementById('ageDivision').value,
+                    format: document.getElementById('format').value,
+                    deckListPaperSize: document.getElementById('deckListPaperSize').value
+                },
+                fontSettings: {
+                    title: document.getElementById('fontTitle').value,
+                    titleColor: document.getElementById('colorTitle').value,
+                    titleUnderlineColor: document.getElementById('colorTitleUnderline').value,
+                    pokemonTitle: document.getElementById('fontPokemonTitle').value,
+                    pokemonCards: document.getElementById('fontPokemonCards').value,
+                    pokemonCount: document.getElementById('fontPokemonCount').value,
+                    trainerTitle: document.getElementById('fontTrainerTitle').value,
+                    trainerCards: document.getElementById('fontTrainerCards').value,
+                    trainerCount: document.getElementById('fontTrainerCount').value,
+                    energyTitle: document.getElementById('fontEnergyTitle').value,
+                    energyCards: document.getElementById('fontEnergyCards').value,
+                    energyCount: document.getElementById('fontEnergyCount').value
+                }
+            };
+            
+            const dataStr = JSON.stringify(saveData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // Generate filename: deckname_deck_MonthAbbr_Day_YYYY_HHMMSS.json
+            const deckName = document.getElementById('deckName').value;
+            const now = new Date();
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const dateStr = `${monthNames[now.getMonth()]}_${now.getDate()}_${now.getFullYear()}`;
+            const timeStr = now.getHours().toString().padStart(2, '0') + 
+                          now.getMinutes().toString().padStart(2, '0') + 
+                          now.getSeconds().toString().padStart(2, '0');
+            
+            let filename;
+            if (deckName) {
+                // Use deck name, replacing spaces and special characters with underscores
+                const safeDeckName = deckName.replace(/[^a-zA-Z0-9]/g, '_');
+                filename = `${safeDeckName}_deck_${dateStr}_${timeStr}.json`;
+            } else {
+                // Fallback to generic name if no deck name provided
+                filename = `pokemon_deck_${dateStr}_${timeStr}.json`;
+            }
+            
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadDeck(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const loadedData = JSON.parse(e.target.result);
+                        
+                        // Check if this is the new format or old format
+                        if (loadedData.deckData) {
+                            // New format with all settings
+                            deckData = loadedData.deckData;
+                            
+                            // Restore card settings
+                            if (loadedData.cardSize) {
+                                document.getElementById('cardSize').value = loadedData.cardSize;
+                                toggleCustomSize();
+                            }
+                            
+                            if (loadedData.customDimensions) {
+                                customDimensions = loadedData.customDimensions;
+                                document.getElementById('customWidth').value = loadedData.customDimensions.width;
+                                document.getElementById('customHeight').value = loadedData.customDimensions.height;
+                            }
+                            
+                            if (loadedData.orientation) {
+                                document.getElementById('orientation').value = loadedData.orientation;
+                            }
+                            
+                            if (loadedData.combineVariants !== undefined) {
+                                document.getElementById('combineVariants').checked = loadedData.combineVariants;
+                            }
+                            
+                            // Restore player information
+                            if (loadedData.playerInfo) {
+                                document.getElementById('deckName').value = loadedData.playerInfo.deckName || '';
+                                document.getElementById('playerName').value = loadedData.playerInfo.name || '';
+                                document.getElementById('playerId').value = loadedData.playerInfo.id || '';
+                                document.getElementById('playerDob').value = loadedData.playerInfo.dob || '';
+                                document.getElementById('ageDivision').value = loadedData.playerInfo.ageDivision || '';
+                                document.getElementById('format').value = loadedData.playerInfo.format || '';
+                                document.getElementById('deckListPaperSize').value = loadedData.playerInfo.deckListPaperSize || 'letter';
+                            }
+                            
+                            // Restore font settings
+                            if (loadedData.fontSettings) {
+                                document.getElementById('fontTitle').value = loadedData.fontSettings.title || 10;
+                                document.getElementById('colorTitle').value = loadedData.fontSettings.titleColor || '#e3350d';
+                                document.getElementById('colorTitleUnderline').value = loadedData.fontSettings.titleUnderlineColor || '#e3350d';
+                                document.getElementById('fontPokemonTitle').value = loadedData.fontSettings.pokemonTitle || 9;
+                                document.getElementById('fontPokemonCards').value = loadedData.fontSettings.pokemonCards || 7;
+                                document.getElementById('fontPokemonCount').value = loadedData.fontSettings.pokemonCount || 7;
+                                document.getElementById('fontTrainerTitle').value = loadedData.fontSettings.trainerTitle || 9;
+                                document.getElementById('fontTrainerCards').value = loadedData.fontSettings.trainerCards || 7;
+                                document.getElementById('fontTrainerCount').value = loadedData.fontSettings.trainerCount || 7;
+                                document.getElementById('fontEnergyTitle').value = loadedData.fontSettings.energyTitle || 9;
+                                document.getElementById('fontEnergyCards').value = loadedData.fontSettings.energyCards || 7;
+                                document.getElementById('fontEnergyCount').value = loadedData.fontSettings.energyCount || 7;
+                            }
+                        } else {
+                            // Old format - just deck data
+                            deckData = loadedData;
+                        }
+                        
+                        renderCards();
+                        alert('Deck loaded successfully!');
+                    } catch (error) {
+                        alert('Error loading deck file: ' + error.message);
+                        console.error(error);
+                    }
+                };
+                reader.readAsText(file);
+            }
+            
+            // Reset file input so the same file can be loaded again
+            event.target.value = '';
+        }
+
+        document.getElementById('cardSize').addEventListener('change', renderPreview);
+        document.getElementById('orientation').addEventListener('change', renderPreview);
+        document.getElementById('deckName').addEventListener('input', renderPreview);
+
+        // Initialize
+        renderCards();
+    </script>
+</body>
+</html>
