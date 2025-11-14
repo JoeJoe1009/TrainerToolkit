@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTCG Trainer Toolkit</title>
+    <title>Trainer Toolkit</title>
     <style>
         * {
             margin: 0;
@@ -25,13 +25,23 @@
             gap: 30px;
         }
 
-        /* Default layout: sidebar + deck list + preview */
-        .container:not(.customize-active) {
+        /* Default layout: sidebar + preview (deck list hidden) */
+        .container:not(.customize-active):not(.decklist-active) {
+            grid-template-columns: 400px 1fr;
+        }
+
+        /* Deck list visible, customize hidden: sidebar + deck list + preview */
+        .container.decklist-active:not(.customize-active) {
             grid-template-columns: 400px 320px 1fr;
         }
 
-        /* When customize panel is active: sidebar + deck list + preview + customize */
-        .container.customize-active {
+        /* Customize visible, deck list hidden: sidebar + preview + customize */
+        .container.customize-active:not(.decklist-active) {
+            grid-template-columns: 400px 1fr 300px;
+        }
+
+        /* Both visible: sidebar + deck list + preview + customize */
+        .container.customize-active.decklist-active {
             grid-template-columns: 400px 320px 1fr 300px;
         }
 
@@ -894,7 +904,7 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <h1>🎴 Prize Tracker Creator</h1>
+            <h1>🎴 Trainer Toolkit</h1>
             
             <div class="form-group">
                 <label>Card Size</label>
@@ -1283,7 +1293,9 @@
 
         function toggleDeckListPanel() {
             const panel = document.getElementById('deckListPanel');
+            const container = document.querySelector('.container');
             panel.classList.toggle('active');
+            container.classList.toggle('decklist-active');
         }
 
         function toggleCustomize() {
@@ -1649,6 +1661,7 @@
         function updateDeckListDisplay() {
             const panel = document.getElementById('deckListPanel');
             const display = document.getElementById('deckListDisplay');
+            const container = document.querySelector('.container');
             
             // Check if there are any cards
             const hasCards = deckData.pokemon.length > 0 || deckData.trainer.length > 0 || deckData.energy.length > 0;
@@ -1656,6 +1669,7 @@
             // Show panel if it has cards OR if user has manually toggled it on
             if (hasCards) {
                 panel.classList.add('active');
+                container.classList.add('decklist-active');
             }
             // If no cards but panel is already visible, keep it visible (user toggled it)
             // Only auto-hide is not needed anymore since user controls visibility
