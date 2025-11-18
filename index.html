@@ -741,6 +741,61 @@
             }
         }
 
+        /* Blank card player info styles */
+        .blank-card-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .blank-card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e3350d;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 3px solid #e3350d;
+            padding-bottom: 8px;
+            width: 100%;
+        }
+
+        .blank-card-info {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 20px;
+            font-size: 11px;
+        }
+
+        .blank-card-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .blank-card-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .blank-card-field-label {
+            font-weight: bold;
+            font-size: 10px;
+            color: #555;
+        }
+
+        .blank-card-field-value {
+            font-size: 12px;
+            color: #000;
+            padding: 6px 8px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            min-height: 28px;
+        }
+
         @media print {
             body {
                 background: white;
@@ -1027,24 +1082,24 @@
                 <h3>Player Information</h3>
                 <div class="form-row-full">
                     <label>Deck Name</label>
-                    <input type="text" id="deckName" placeholder="Enter deck name (e.g., Dragapult Control)">
+                    <input type="text" id="deckName" placeholder="Enter deck name (e.g., Dragapult Control)" oninput="updateBlankCard()">
                 </div>
                 <div class="form-row-full">
                     <label>Player Name</label>
-                    <input type="text" id="playerName" placeholder="Enter player name">
+                    <input type="text" id="playerName" placeholder="Enter player name" oninput="updateBlankCard()">
                 </div>
                 <div class="form-row-full">
                     <label>Player ID</label>
-                    <input type="text" id="playerId" placeholder="Enter player ID">
+                    <input type="text" id="playerId" placeholder="Enter player ID" oninput="updateBlankCard()">
                 </div>
                 <div class="form-row-full">
                     <label>Date of Birth</label>
-                    <input type="text" id="playerDob" placeholder="MM/DD/YYYY" maxlength="10" oninput="formatDOB(this)">
+                    <input type="text" id="playerDob" placeholder="MM/DD/YYYY" maxlength="10" oninput="formatDOB(this); updateBlankCard()">
                 </div>
                 <div class="form-row">
                     <div>
                         <label>Age Division</label>
-                        <select id="ageDivision">
+                        <select id="ageDivision" onchange="updateBlankCard()">
                             <option value="">Select Division</option>
                             <option value="Junior">Junior</option>
                             <option value="Senior">Senior</option>
@@ -1053,7 +1108,7 @@
                     </div>
                     <div>
                         <label>Format</label>
-                        <select id="format">
+                        <select id="format" onchange="updateBlankCard()">
                             <option value="">Select Format</option>
                             <option value="Standard">Standard</option>
                             <option value="Expanded">Expanded</option>
@@ -1129,7 +1184,37 @@
 
             <!-- Prize Card Preview -->
             <div class="print-wrapper" id="prizeCardWrapper">
-                <div id="blankCard" class="blank-card card-preview card-5x3-landscape"></div>
+                <div id="blankCard" class="blank-card card-preview card-5x3-landscape">
+                    <div class="blank-card-content">
+                        <div class="blank-card-title" id="blankCardTitle">PLAYER INFORMATION</div>
+                        <div class="blank-card-info">
+                            <div class="blank-card-field full-width">
+                                <div class="blank-card-field-label">Deck Name:</div>
+                                <div class="blank-card-field-value" id="blankDeckName"></div>
+                            </div>
+                            <div class="blank-card-field">
+                                <div class="blank-card-field-label">Player Name:</div>
+                                <div class="blank-card-field-value" id="blankPlayerName"></div>
+                            </div>
+                            <div class="blank-card-field">
+                                <div class="blank-card-field-label">Player ID:</div>
+                                <div class="blank-card-field-value" id="blankPlayerId"></div>
+                            </div>
+                            <div class="blank-card-field">
+                                <div class="blank-card-field-label">Date of Birth:</div>
+                                <div class="blank-card-field-value" id="blankPlayerDob"></div>
+                            </div>
+                            <div class="blank-card-field">
+                                <div class="blank-card-field-label">Age Division:</div>
+                                <div class="blank-card-field-value" id="blankAgeDivision"></div>
+                            </div>
+                            <div class="blank-card-field">
+                                <div class="blank-card-field-label">Format:</div>
+                                <div class="blank-card-field-value" id="blankFormat"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="fold-line"><span>✂️ FOLD HERE ✂️</span></div>
                 <div id="cardPreview" class="card-preview card-5x3-landscape">
                     <div class="card-header">DECK & PRIZE TRACKER</div>
@@ -1220,6 +1305,16 @@
 
         let lastImportedText = ''; // Store the last imported deck list
         let customDimensions = { width: 5, height: 3 }; // Store custom dimensions
+
+        function updateBlankCard() {
+            // Update all blank card fields with player information
+            document.getElementById('blankDeckName').textContent = document.getElementById('deckName').value || '';
+            document.getElementById('blankPlayerName').textContent = document.getElementById('playerName').value || '';
+            document.getElementById('blankPlayerId').textContent = document.getElementById('playerId').value || '';
+            document.getElementById('blankPlayerDob').textContent = document.getElementById('playerDob').value || '';
+            document.getElementById('blankAgeDivision').textContent = document.getElementById('ageDivision').value || '';
+            document.getElementById('blankFormat').textContent = document.getElementById('format').value || '';
+        }
 
         function formatDOB(input) {
             // Store cursor position
@@ -1552,6 +1647,7 @@
                 
                 // Re-render everything
                 renderCards();
+                updateBlankCard();
             }
         }
 
@@ -2114,6 +2210,7 @@
                         }
                         
                         renderCards();
+                        updateBlankCard();
                         alert('Deck loaded successfully!');
                     } catch (error) {
                         alert('Error loading deck file: ' + error.message);
@@ -2184,6 +2281,7 @@
 
         // Initialize
         renderCards();
+        updateBlankCard();
     </script>
 </body>
 </html>
