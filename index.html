@@ -19,6 +19,39 @@
             background-attachment: fixed;
         }
 
+        /* Custom resize handle styling */
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+
+        .resize-handle:hover {
+            background: rgba(227, 53, 13, 0.1);
+        }
+
+        .resize-handle-left {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+
+        .resize-handle-left:hover {
+            background: rgba(227, 53, 13, 0.1);
+        }
+
+        .resizable {
+            position: relative;
+        }
+
         .container {
             max-width: 1900px;
             margin: 0 auto;
@@ -28,22 +61,22 @@
 
         /* Default layout: sidebar + preview (deck list hidden) */
         .container:not(.customize-active):not(.decklist-active) {
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: auto 1fr;
         }
 
         /* Deck list visible, customize hidden: sidebar + deck list + preview */
         .container.decklist-active:not(.customize-active) {
-            grid-template-columns: 400px 320px 1fr;
+            grid-template-columns: auto auto 1fr;
         }
 
         /* Customize visible, deck list hidden: sidebar + preview + customize */
         .container.customize-active:not(.decklist-active) {
-            grid-template-columns: 400px 1fr 300px;
+            grid-template-columns: auto 1fr auto;
         }
 
         /* Both visible: sidebar + deck list + preview + customize */
         .container.customize-active.decklist-active {
-            grid-template-columns: 400px 320px 1fr 300px;
+            grid-template-columns: auto auto 1fr auto;
         }
 
         .deck-list-panel {
@@ -57,6 +90,9 @@
             max-height: calc(100vh - 40px);
             overflow-y: auto;
             display: none;
+            min-width: 320px;
+            max-width: 600px;
+            width: 320px;
         }
 
         .deck-list-panel.active {
@@ -84,6 +120,7 @@
 
         .deck-list-section {
             margin-bottom: 20px;
+            overflow-x: auto;
         }
 
         .deck-list-section h4 {
@@ -106,6 +143,7 @@
             color: #666;
             border-bottom: 2px solid #ddd;
             margin-bottom: 5px;
+            min-width: 280px;
         }
 
         .deck-list-headers div {
@@ -114,6 +152,12 @@
 
         .deck-list-headers div:first-child {
             text-align: left;
+        }
+
+        /* Pokemon section with regulation mark */
+        .deck-list-headers.with-reg {
+            grid-template-columns: minmax(120px, 1fr) 60px 60px 40px 40px 30px;
+            min-width: 350px;
         }
 
         .add-section-btn {
@@ -142,10 +186,17 @@
             padding: 6px 0;
             font-size: 11px;
             border-bottom: 1px solid #f0f0f0;
+            min-width: 280px;
         }
 
         .deck-list-item:last-child {
             border-bottom: none;
+        }
+
+        /* Pokemon items with regulation mark */
+        .deck-list-item.with-reg {
+            grid-template-columns: minmax(120px, 1fr) 60px 60px 40px 40px 30px;
+            min-width: 350px;
         }
 
         .deck-list-item input[type="text"] {
@@ -205,6 +256,9 @@
             top: 20px;
             max-height: calc(100vh - 40px);
             overflow-y: auto;
+            min-width: 400px;
+            max-width: 700px;
+            width: 400px;
         }
 
         .customize-panel {
@@ -218,6 +272,9 @@
             max-height: calc(100vh - 40px);
             overflow-y: auto;
             display: none;
+            min-width: 300px;
+            max-width: 500px;
+            width: 300px;
         }
 
         .customize-panel.active {
@@ -234,6 +291,8 @@
             align-items: center;
             min-height: 700px;
             min-width: 600px;
+            max-width: 1400px;
+            width: 100%;
         }
 
         .preview-area h2 {
@@ -643,6 +702,14 @@
         .official-card-set {
             color: #666;
             font-size: 10px;
+            min-width: 60px;
+        }
+
+        .official-card-reg {
+            color: #666;
+            font-size: 10px;
+            min-width: 20px;
+            text-align: center;
         }
 
         .official-total {
@@ -904,7 +971,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="sidebar">
+        <div class="sidebar resizable" id="sidebar">
+            <div class="resize-handle" data-panel="sidebar"></div>
             <h1>🎴 PTCG Trainer Toolkit</h1>
             
             <div class="form-group">
@@ -1016,12 +1084,15 @@
             <button class="toggle-customize-btn" onclick="toggleCustomize()">🎨 Customize Fonts</button>
         </div>
 
-        <div class="deck-list-panel" id="deckListPanel">
+        <div class="deck-list-panel resizable" id="deckListPanel">
+            <div class="resize-handle" data-panel="deckListPanel"></div>
             <h3>📋 Deck List</h3>
             <div id="deckListDisplay"></div>
         </div>
 
-        <div class="preview-area">
+        <div class="preview-area resizable" id="previewArea">
+            <div class="resize-handle-left" data-panel="previewArea" data-side="left"></div>
+            <div class="resize-handle" data-panel="previewArea"></div>
             <h2>Preview</h2>
             
             <!-- Official Deck List -->
@@ -1068,7 +1139,8 @@
             </div>
         </div>
 
-        <div class="customize-panel" id="customizePanel">
+        <div class="customize-panel resizable" id="customizePanel">
+            <div class="resize-handle" data-panel="customizePanel"></div>
             <h2>🎨 Font Customization</h2>
             
             <div class="customize-section">
@@ -1248,10 +1320,14 @@
                     // Only show set/number for Pokemon
                     const setInfo = (type === 'pokemon' && card.setCode && card.setNumber) ? 
                         `${card.setCode}-${card.setNumber}` : '';
+                    // Show regulation mark for Pokemon if it exists
+                    const regMark = (type === 'pokemon' && card.regMark) ? card.regMark : '';
+                    
                     html += `<div class="official-card-item">
                         <span class="official-card-count">${card.count}</span>
                         <span class="official-card-name">${card.name}</span>
                         <span class="official-card-set">${setInfo}</span>
+                        <span class="official-card-reg">${regMark}</span>
                     </div>`;
                 });
 
@@ -1415,7 +1491,11 @@
         }
 
         function addCard(type) {
-            deckData[type].push({ name: '', setCode: '', setNumber: '', count: '1', prize: '' });
+            const newCard = { name: '', setCode: '', setNumber: '', count: '1', prize: '' };
+            if (type === 'pokemon') {
+                newCard.regMark = '';
+            }
+            deckData[type].push(newCard);
             renderCards();
         }
 
@@ -1585,24 +1665,32 @@
                 }
                 
                 for (let card of cardMap.values()) {
-                    deckData[card.type].push({
+                    const cardData = {
                         name: card.name,
                         setCode: card.setCode,
                         setNumber: card.setNumber,
                         count: card.count.toString(),
                         prize: ''
-                    });
+                    };
+                    if (card.type === 'pokemon') {
+                        cardData.regMark = '';
+                    }
+                    deckData[card.type].push(cardData);
                 }
             } else {
                 // Keep all variants separate
                 for (let card of allCards) {
-                    deckData[card.type].push({
+                    const cardData = {
                         name: card.name,
                         setCode: card.setCode,
                         setNumber: card.setNumber,
                         count: card.count.toString(),
                         prize: ''
-                    });
+                    };
+                    if (card.type === 'pokemon') {
+                        cardData.regMark = '';
+                    }
+                    deckData[card.type].push(cardData);
                 }
             }
             
@@ -1687,16 +1775,17 @@
                         <span>Pokémon (${pokemonCount})</span>
                         <button class="add-section-btn" onclick="addCard('pokemon')" title="Add Pokémon">+</button>
                     </h4>
-                    <div class="deck-list-headers">
+                    <div class="deck-list-headers with-reg">
                         <div>Name:</div>
                         <div>Set:</div>
                         <div>Coll. #:</div>
                         <div>Qty:</div>
+                        <div>Reg:</div>
                         <div></div>
                     </div>`;
                 deckData.pokemon.forEach((card, index) => {
                     if (card.name.trim() || card.count) {
-                        html += `<div class="deck-list-item">
+                        html += `<div class="deck-list-item with-reg">
                             <input type="text" value="${card.name}" 
                                 onchange="updateCard('pokemon', ${index}, 'name', this.value)"
                                 oninput="updateCard('pokemon', ${index}, 'name', this.value)"
@@ -1712,6 +1801,12 @@
                                 placeholder="No.">
                             <input type="number" value="${card.count}" min="1" max="99" 
                                 onchange="updateCard('pokemon', ${index}, 'count', this.value)">
+                            <input type="text" value="${card.regMark || ''}" 
+                                onchange="updateCard('pokemon', ${index}, 'regMark', this.value)"
+                                oninput="updateCard('pokemon', ${index}, 'regMark', this.value)"
+                                placeholder="Reg"
+                                maxlength="1"
+                                style="text-transform: uppercase; text-align: center;">
                             <span class="remove-icon" onclick="removeCard('pokemon', ${index})" title="Remove">×</span>
                         </div>`;
                     }
@@ -2035,6 +2130,57 @@
         document.getElementById('cardSize').addEventListener('change', renderPreview);
         document.getElementById('orientation').addEventListener('change', renderPreview);
         document.getElementById('deckName').addEventListener('input', renderPreview);
+
+        // Panel resize functionality
+        let isResizing = false;
+        let currentPanel = null;
+        let startX = 0;
+        let startWidth = 0;
+        let resizeSide = 'right';
+
+        document.querySelectorAll('.resize-handle, .resize-handle-left').forEach(handle => {
+            handle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                const panelId = this.getAttribute('data-panel');
+                currentPanel = document.getElementById(panelId);
+                resizeSide = this.getAttribute('data-side') === 'left' ? 'left' : 'right';
+                startX = e.clientX;
+                startWidth = parseInt(window.getComputedStyle(currentPanel).width, 10);
+                
+                e.preventDefault();
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing || !currentPanel) return;
+            
+            let width;
+            if (resizeSide === 'left') {
+                // When resizing from left, movement is inverted
+                width = startWidth - (e.clientX - startX);
+            } else {
+                // When resizing from right
+                width = startWidth + (e.clientX - startX);
+            }
+            
+            const minWidth = parseInt(window.getComputedStyle(currentPanel).minWidth, 10);
+            const maxWidth = parseInt(window.getComputedStyle(currentPanel).maxWidth, 10);
+            
+            if (width >= minWidth && width <= maxWidth) {
+                currentPanel.style.width = width + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+                currentPanel = null;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
 
         // Initialize
         renderCards();
